@@ -127,10 +127,33 @@ quant-skills/
 ├── factor-library-manager/ # 因子库管理skill
 │   ├── skill.md            # Skill定义文件
 │   ├── classification/     # 分类体系定义
-│   ├── database/           # 数据库配置
+│   ├── database/           # 数据库配置和工具
+│   │   ├── db_utils.py     # 数据库操作工具
+│   │   ├── init_db.sql     # 表结构定义
+│   │   └── .env.example    # 配置模板
+│   ├── scripts/            # 实用脚本
+│   │   ├── sync_to_db.py   # 因子数据同步脚本
+│   │   ├── init_aigenfactor_db.py  # 数据库初始化
+│   │   ├── update_metadata.py      # 元信息更新
+│   │   ├── verify_factor_data.py   # 数据验证
+│   │   └── unify_metadata_fields.py # 字段统一
 │   └── templates/          # 模板文件
 └── [其他skills]/           # 未来可添加更多
 ```
+
+## Scripts 使用说明
+
+`factor-library-manager/scripts/` 包含实用脚本：
+
+| 脚本 | 功能 |
+|------|------|
+| `sync_to_db.py` | 从复现项目同步因子数据到数据库 |
+| `init_aigenfactor_db.py` | 初始化/重建数据库表结构 |
+| `update_metadata.py` | 批量更新因子元信息 |
+| `verify_factor_data.py` | 验证数据库与INDEX.md一致性 |
+| `unify_metadata_fields.py` | 统一字段命名规则 |
+
+**注意**: 这些脚本需要在研报解析目录下运行，因为它们依赖 `utils/db_config.py` 读取数据库配置。
 
 ## 贡献
 
