@@ -41,6 +41,24 @@ cp -r quant-skills/report-parser ~/.claude/skills/
 - 结构化markdown文档（包含数据源、因子计算步骤、回测结果等）
 - 自动生成config.yaml配置（用于因子复现）
 
+### factor-reproducer-adv
+
+**描述**: 高级因子复现器，基于适配器模式复用MultiFactorModel模块，实现低偏差因子复现。
+
+**使用场景**:
+- 用户提到"复现因子"、"因子复现"、"回测因子"
+- 基于report-parser解析结果进行因子实现
+
+**调用方式**:
+```
+/factor-reproducer-adv {解析文档路径}
+```
+
+**特点**:
+- 适配器模式，复用现有回测框架
+- 偏差控制机制，确保复现结果接近研报
+- 自动生成复现报告和图表
+
 ## 同步更新
 
 ```bash
@@ -56,11 +74,12 @@ cp -r report-parser ~/.claude/skills/
 
 ```
 quant-skills/
-├── README.md           # 本文件
-├── report-parser/      # 研报解析skill
-│   ├── skill.md        # Skill定义文件
-│   └── evals/          # 评估测试（可选）
-└── [其他skills]/       # 未来可添加更多
+├── README.md               # 本文件
+├── report-parser/          # 研报解析skill
+│   └── skill.md            # Skill定义文件
+├── factor-reproducer-adv/  # 高级因子复现skill
+│   └── skill.md            # Skill定义文件
+└── [其他skills]/           # 未来可添加更多
 ```
 
 ## 贡献
@@ -71,5 +90,5 @@ quant-skills/
 
 ---
 
-**作者**: HooH
-**更新日期**: 2026-05-01更新日期: 2026-05-01
+**作者**: FitzHoo
+**更新日期**: 2026-05-01
