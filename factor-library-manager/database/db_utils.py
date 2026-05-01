@@ -3,8 +3,14 @@
 ================
 
 用于将因子数据写入 PostgreSQL 数据库 (aigenfactor)
+
+配置管理：
+---------
+- 默认配置从 .env 文件读取（推荐）
+- 也可通过 db_config 字典显式传入
 """
 
+import os
 import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine, text
@@ -14,15 +20,40 @@ from pathlib import Path
 import yaml
 from datetime import datetime
 
+# 尝试加载 dotenv（可选依赖）
+try:
+    from dotenv import load_dotenv
+    load_dotenv()  # 自动加载 .env 文件
+except ImportError:
+    pass  # dotenv 未安装时，直接读取系统环境变量
 
-# 数据库默认配置
-DEFAULT_DB_CONFIG = {
-    "host": "2.tcp.nas.cpolar.cn",
-    "port": 14983,
-    "user": "postgres",
-    "password": "",  # 需要用户提供
-    "database": "aigenfactor"
-}
+
+# ============================================================================
+# 默认数据库配置（从环境变量读取）
+# ============================================================================
+
+def get_default_db_config() -> dict:
+    """
+    从环境变量获取默认数据库配置
+
+    环境变量名称：
+    - DB_HOST: 数据库主机
+    - DB_PORT: 数据库端口
+    - DB_USER: 用户名
+    - DB_PASSWORD: 密码
+    - DB_NAME: 数据库名
+
+    Returns:
+    --------
+    dict: 数据库配置字典
+    """
+    return {
+        "host": os.getenv('DB_HOST', 'localhost'),
+        "port": int(os.getenv('DB_PORT', '5432')),
+        "user": os.getenv('DB_USER', 'postgres'),
+        "password": os.getenv('DB_PASSWORD', ''),
+        "database": os.getenv('DB_NAME', 'aigenfactor')
+    }
 
 
 def get_db_engine(db_config: dict = None) -> Engine:
@@ -31,14 +62,24 @@ def get_db_engine(db_config: dict = None) -> Engine:
 
     Parameters:
     -----------
-    db_config: 数据库配置，包含 host, port, user, password, database
+    db_config: 数据库配置（可选），包含 host, port, user, password, database
+        如果不传入，自动使用.env默认配置
 
     Returns:
     --------
     Engine: SQLAlchemy 数据库引擎
+
+    Example:
+    --------
+    >>> # 使用默认配置（从.env读取）
+    >>> engine = get_db_engine()
+
+    >>> # 显式传入配置
+    >>> db_config = {'host': 'localhost', 'port': 5432, ...}
+    >>> engine = get_db_engine(db_config)
     """
     if db_config is None:
-        db_config = DEFAULT_DB_CONFIG
+        db_config = get_default_db_config()
 
     connection_string = (
         f"postgresql://{db_config['user']}:{db_config['password']}"
@@ -118,24 +159,27 @@ def write_factor_metadata(engine: Engine, factor_data: dict) -> bool:
     -----------
     engine: 数据库引擎
     factor_data: 因子元信息字典，包含：
-        - factor_name: 因子名称
-        - full_name: 完整名称
+        - factor_name: 因子名称（英文格式，必填）
+        - full_name: 完整名称（中文）
         - abbreviation: 缩写
-        - style: 风格分类
-        - data_source: 数据源
-        - frequency: 频率
-        - broker: 来源券商
-        - report_title: 研报标题
+        - style: 风格分类（英文：sentiment/value/momentum/quality/growth/technical）
+        - data_source: 数据源（英文：shareholder/financial/market/alternative）
+        - frequency: 频率（monthly/weekly/daily）
+        - broker: 来源券商（中文）
+        - report_title: 研报标题（必填）
         - report_date: 研报日期
-        - formula: 计算公式
-        - params: 参数配置 (dict)
-        - tags: 标签列表
-        - notes: 备注
+        - notes: 备注（必填）
 
     Returns:
     --------
     bool: 是否写入成功
     """
+    # 确保必填字段存在
+    required_fields = ['factor_name', 'report_title', 'notes']
+    for field in required_fields:
+        if field not in factor_data or not factor_data[field]:
+            raise ValueError(f"必填字段 {field} 缺失或为空")
+
     with engine.connect() as conn:
         # 检查是否已存在
         result = conn.execute(
@@ -154,35 +198,43 @@ def write_factor_metadata(engine: Engine, factor_data: dict) -> bool:
                 broker = :broker,
                 report_title = :report_title,
                 report_date = :report_date,
-                formula = :formula,
-                params = :params,
-                tags = :tags,
-                notes = :notes,
-                updated_at = NOW()
+                notes = :notes
             WHERE factor_name = :factor_name
             """
             conn.execute(text(update_sql), {
-                **factor_data,
-                'params': str(factor_data.get('params', {})),
-                'tags': factor_data.get('tags', [])
+                'factor_name': factor_data['factor_name'],
+                'full_name': factor_data.get('full_name', ''),
+                'abbreviation': factor_data.get('abbreviation', ''),
+                'style': factor_data.get('style', ''),
+                'data_source': factor_data.get('data_source', ''),
+                'frequency': factor_data.get('frequency', 'monthly'),
+                'broker': factor_data.get('broker', ''),
+                'report_title': factor_data['report_title'],
+                'report_date': factor_data.get('report_date'),
+                'notes': factor_data['notes']
             })
         else:
             # 插入
             insert_sql = """
             INSERT INTO factor_metadata (
                 factor_name, full_name, abbreviation, style, data_source,
-                frequency, broker, report_title, report_date, formula,
-                params, tags, notes
+                frequency, broker, report_title, report_date, notes
             ) VALUES (
                 :factor_name, :full_name, :abbreviation, :style, :data_source,
-                :frequency, :broker, :report_title, :report_date, :formula,
-                :params::jsonb, :tags, :notes
+                :frequency, :broker, :report_title, :report_date, :notes
             )
             """
             conn.execute(text(insert_sql), {
-                **factor_data,
-                'params': str(factor_data.get('params', {})),
-                'tags': factor_data.get('tags', [])
+                'factor_name': factor_data['factor_name'],
+                'full_name': factor_data.get('full_name', ''),
+                'abbreviation': factor_data.get('abbreviation', ''),
+                'style': factor_data.get('style', ''),
+                'data_source': factor_data.get('data_source', ''),
+                'frequency': factor_data.get('frequency', 'monthly'),
+                'broker': factor_data.get('broker', ''),
+                'report_title': factor_data['report_title'],
+                'report_date': factor_data.get('report_date'),
+                'notes': factor_data['notes']
             })
 
         conn.commit()
@@ -197,60 +249,73 @@ def write_factor_values(
     date_col: str = 'date',
     stock_col: str = 'stock_code',
     value_col: str = 'factor_value',
-    version: str = 'v1.0'
+    version: str = 'v1.0',
+    chunk_size: int = 50000
 ) -> int:
     """
-    写入因子值到 factor_values 表
+    写入因子值到 factor_values 表（批量插入优化）
 
     Parameters:
     -----------
     engine: 数据库引擎
     factor_name: 因子名称
     df: 因子值DataFrame，包含日期、股票代码、因子值
-    date_col: 日期列名
+    date_col: 日期列名（支持YYYY-MM-DD或YYYYMMDD格式）
     stock_col: 股票代码列名
     value_col: 因子值列名
     version: 版本号
+    chunk_size: 批量插入块大小
 
     Returns:
     --------
     int: 写入的记录数
-    """
-    # 准备数据
-    records = []
-    for _, row in df.iterrows():
-        records.append({
-            'trade_date': row[date_col],
-            'stock_code': row[stock_col],
-            'factor_name': factor_name,
-            'factor_value': row[value_col],
-            'version': version
-        })
 
-    # 使用 COPY 或批量插入
+    Notes:
+    -----
+    - factor_value 保留4位小数
+    - trade_date 格式为 DATE (YYYY-MM-DD)
+    - stock_code 格式为 .SZ/.SH
+    """
+    # 标准化日期格式
+    df_copy = df.copy()
+    if df_copy[date_col].dtype == 'object':
+        # YYYYMMDD 字符串转为 YYYY-MM-DD
+        df_copy[date_col] = pd.to_datetime(df_copy[date_col], format='%Y%m%d').dt.strftime('%Y-%m-%d')
+    else:
+        df_copy[date_col] = pd.to_datetime(df_copy[date_col]).dt.strftime('%Y-%m-%d')
+
+    # 因子值保留4位小数
+    df_copy[value_col] = df_copy[value_col].round(4)
+
+    # 准备插入数据
+    df_insert = df_copy[[date_col, stock_col, value_col]].copy()
+    df_insert['factor_name'] = factor_name
+    df_insert['version'] = version
+    df_insert.columns = ['trade_date', 'stock_code', 'factor_value', 'factor_name', 'version']
+
+    # 排序：按日期升序、股票代码升序
+    df_insert = df_insert.sort_values(['trade_date', 'stock_code'])
+
     with engine.connect() as conn:
         # 先删除旧数据
         conn.execute(
             text("DELETE FROM factor_values WHERE factor_name = :name AND version = :ver"),
             {"name": factor_name, "ver": version}
         )
-
-        # 批量插入
-        if len(records) > 0:
-            # 使用 pandas to_sql
-            df_insert = pd.DataFrame(records)
-            df_insert.to_sql(
-                'factor_values',
-                engine,
-                if_exists='append',
-                index=False,
-                method='multi',
-                chunksize=1000
-            )
-
         conn.commit()
 
-    return len(records)
+    # 批量插入（使用chunk_size分块）
+    if len(df_insert) > 0:
+        df_insert.to_sql(
+            'factor_values',
+            engine,
+            if_exists='append',
+            index=False,
+            method='multi',
+            chunksize=chunk_size
+        )
+
+    return len(df_insert)
 
 
 def write_factor_performance(engine: Engine, factor_name: str, perf_data: dict, version: str = 'v1.0') -> bool:
@@ -388,13 +453,16 @@ def register_factor_to_db(
 if __name__ == "__main__":
     import argparse
 
+    # 获取默认配置
+    default_config = get_default_db_config()
+
     parser = argparse.ArgumentParser(description='因子库数据库工具')
     parser.add_argument('--init-db', action='store_true', help='初始化数据库表')
-    parser.add_argument('--host', default='2.tcp.nas.cpolar.cn', help='数据库主机')
-    parser.add_argument('--port', type=int, default=14983, help='数据库端口')
-    parser.add_argument('--user', default='postgres', help='数据库用户')
-    parser.add_argument('--password', required=True, help='数据库密码')
-    parser.add_argument('--database', default='aigenfactor', help='数据库名称')
+    parser.add_argument('--host', default=default_config['host'], help='数据库主机（默认从.env读取）')
+    parser.add_argument('--port', type=int, default=default_config['port'], help='数据库端口（默认从.env读取）')
+    parser.add_argument('--user', default=default_config['user'], help='数据库用户（默认从.env读取）')
+    parser.add_argument('--password', default=default_config['password'], help='数据库密码（默认从.env读取）')
+    parser.add_argument('--database', default=default_config['database'], help='数据库名称（默认从.env读取）')
 
     args = parser.parse_args()
 
@@ -410,3 +478,10 @@ if __name__ == "__main__":
         engine = get_db_engine(db_config)
         init_database_tables(engine)
         print("数据库初始化完成")
+    else:
+        # 测试连接
+        engine = get_db_engine(db_config)
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT COUNT(*) FROM factor_metadata"))
+            count = result.fetchone()[0]
+            print(f"数据库连接成功，当前因子数量: {count}")

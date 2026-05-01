@@ -11,27 +11,23 @@
 -- ============================================
 CREATE TABLE IF NOT EXISTS factor_metadata (
     id SERIAL PRIMARY KEY,
-    factor_name VARCHAR(100) NOT NULL UNIQUE,      -- 因子名称（如扎堆效应_SNC）
-    full_name VARCHAR(200),                         -- 完整名称
+    factor_name VARCHAR(100) NOT NULL UNIQUE,      -- 因子名称（英文格式，如HolderNumChange_SNC）
+    full_name VARCHAR(200),                         -- 完整名称（中文）
     abbreviation VARCHAR(20),                       -- 缩写
-    style VARCHAR(20),                              -- 风格分类：情绪/价值/动量/质量/成长/技术
-    data_source VARCHAR(20),                        -- 数据源：股东/财务/行情/另类
-    frequency VARCHAR(10),                          -- 频率：月频/周频/日频
-    broker VARCHAR(50),                             -- 来源券商
-    report_title VARCHAR(200),                      -- 研报标题
+    style VARCHAR(20),                              -- 风格分类（英文）：sentiment/value/momentum/quality/growth/technical
+    data_source VARCHAR(20),                        -- 数据源（英文）：shareholder/financial/market/alternative
+    frequency VARCHAR(10),                          -- 频率：monthly/weekly/daily
+    broker VARCHAR(50),                             -- 来源券商（中文）
+    report_title VARCHAR(200) NOT NULL,             -- 研报标题（必填）
     report_date DATE,                               -- 研报日期
-    formula TEXT,                                   -- 计算公式
-    params JSONB,                                   -- 参数配置（JSON格式）
-    tags TEXT[],                                    -- 标签数组
-    notes TEXT,                                     -- 备注
-    current_version VARCHAR(10) DEFAULT 'v1.0',     -- 当前版本
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    notes TEXT NOT NULL,                            -- 备注（必填）
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE factor_metadata IS '因子元信息表';
-COMMENT ON COLUMN factor_metadata.factor_name IS '因子唯一标识';
-COMMENT ON COLUMN factor_metadata.params IS '参数配置，如 {"gap": 3, "window": 8}';
+COMMENT ON COLUMN factor_metadata.factor_name IS '因子唯一标识（英文格式：Name_Abbr）';
+COMMENT ON COLUMN factor_metadata.style IS '风格分类（英文）：sentiment/value/momentum/quality/growth/technical';
+COMMENT ON COLUMN factor_metadata.data_source IS '数据源（英文）：shareholder/financial/market/alternative';
 
 -- ============================================
 -- 3. 因子值表（核心表）

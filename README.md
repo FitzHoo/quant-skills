@@ -81,6 +81,29 @@ cp -r quant-skills/report-parser ~/.claude/skills/
 - 版本管理（参数调整记录）
 - 报告生成（月度汇总）
 
+## 配置说明
+
+数据库连接使用 `.env` 文件配置，避免密码泄露。
+
+```bash
+# 复制模板文件
+cp factor-library-manager/database/.env.example .env
+
+# 编辑配置（填写实际数据库信息）
+# DB_HOST=localhost
+# DB_PORT=5432
+# DB_USER=your_username
+# DB_PASSWORD=your_password
+# DB_NAME=aigenfactor
+```
+
+**安装依赖**（可选，用于自动加载.env）：
+```bash
+pip install python-dotenv
+```
+
+**注意**：`.env` 文件已在 `.gitignore` 中排除，不会被提交到仓库。
+
 ## 同步更新
 
 ```bash
