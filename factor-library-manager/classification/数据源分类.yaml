@@ -1,0 +1,76 @@
+# 数据源分类体系
+# 用于标记因子依赖的数据类型
+
+categories:
+  - name: "股东"
+    description: "股东相关数据"
+    data_fields:
+      - "holder_number"
+      - "holder_change"
+      - "institutional_holding"
+      - "north_bound_flow"
+    tables:
+      - "ashareholder"
+      - "ainstitution_holding"
+      - "anorth_bound"
+
+  - name: "财务"
+    description: "财务报表数据"
+    data_fields:
+      - "revenue"
+      - "net_profit"
+      - "roe"
+      - "roa"
+      - "gross_margin"
+      - "operating_cash_flow"
+      - "free_cash_flow"
+      - "eps"
+      - "pe_ratio"
+      - "pb_ratio"
+    tables:
+      - "afinancial_indicator"
+      - "aincome_statement"
+      - "abalance_sheet"
+      - "acash_flow"
+
+  - name: "行情"
+    description: "市场价格和交易数据"
+    data_fields:
+      - "close"
+      - "open"
+      - "high"
+      - "low"
+      - "volume"
+      - "turnover"
+      - "vwap"
+      - "adj_close"
+      - "return"
+    tables:
+      - "adaily_quote"
+      - "amonthly_quote"
+
+  - name: "另类"
+    description: "非传统数据源"
+    data_fields:
+      - "sentiment_index"
+      - "news_sentiment"
+      - "social_media"
+      - "analyst_rating"
+      - "consensus_forecast"
+    tables:
+      - "aanalyst_rating"
+      - "aconsensus"
+
+  - name: "指数"
+    description: "指数成分和权重数据"
+    data_fields:
+      - "index_weight"
+      - "index_member"
+    tables:
+      - "aindex_member"
+      - "aindex_weight"
+
+mapping_rules:
+  - "根据因子计算公式中使用的数据字段确定"
+  - "使用多个数据源时选择主数据源"
+  - "另类数据包括分析师、舆情、预测等"

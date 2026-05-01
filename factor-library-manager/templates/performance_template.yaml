@@ -1,0 +1,41 @@
+# 回测表现模板
+# 复制此模板到 04_因子注册/factors/{因子名}/performance.yaml
+
+version: "v1.0"
+backtest_period: ""
+rebalance_freq: ""
+universe: ""
+
+# 核心指标
+metrics:
+  rank_ic_mean: 0        # 单位：%
+  rank_icir: 0
+  ic_positive_ratio: 0   # 单位：%
+  long_short_return: 0   # 年化多空收益，单位：%
+  long_short_volatility: 0
+  max_drawdown: 0        # 单位：%
+  sharpe_ratio: 0
+
+# 分组表现
+group_returns:
+  group0: 0              # 空头年化收益
+  group1: 0
+  group2: 0
+  group3: 0
+  group4: 0              # 多头年化收益
+
+# 指数增强表现（如有）
+index_enhancement:
+  hs300: { ic: 0, excess: 0 }
+  zz500: { ic: 0, excess: 0 }
+  zz1000: { ic: 0, excess: 0 }
+
+# 适用场景
+suitability:
+  recommended_universe: []
+  recommended_freq: ""
+  neutralization: ""
+
+# 数据来源
+data_source: ""
+verified_at: ""

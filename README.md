@@ -59,6 +59,28 @@ cp -r quant-skills/report-parser ~/.claude/skills/
 - 偏差控制机制，确保复现结果接近研报
 - 自动生成复现报告和图表
 
+### factor-library-manager
+
+**描述**: 因子库管理器，系统化管理已复现的量化因子，解决分类混乱、表现缺失、版本无记录问题。
+
+**使用场景**:
+- 用户提到"注册因子"、"因子入库"、"管理因子"
+- 复现完成后将因子加入因子库
+
+**调用方式**:
+```
+/factor-library-manager 注册因子
+/factor-query {查询条件}
+/factor-compare {因子1} {因子2}
+```
+
+**功能**:
+- 因子注册（自动同步数据库）
+- 因子查询（多维度检索）
+- 因子对比（表现相关性分析）
+- 版本管理（参数调整记录）
+- 报告生成（月度汇总）
+
 ## 同步更新
 
 ```bash
@@ -79,6 +101,11 @@ quant-skills/
 │   └── skill.md            # Skill定义文件
 ├── factor-reproducer-adv/  # 高级因子复现skill
 │   └── skill.md            # Skill定义文件
+├── factor-library-manager/ # 因子库管理skill
+│   ├── skill.md            # Skill定义文件
+│   ├── classification/     # 分类体系定义
+│   ├── database/           # 数据库配置
+│   └── templates/          # 模板文件
 └── [其他skills]/           # 未来可添加更多
 ```
 

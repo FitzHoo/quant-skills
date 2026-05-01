@@ -1,0 +1,55 @@
+# 研报来源索引
+# 记录已复现研报的券商来源
+
+brokers:
+  - name: "开源证券"
+    abbreviation: "KY"
+    reports_count: 0
+    factors_count: 0
+    notable_reports: []
+
+  - name: "华泰证券"
+    abbreviation: "HT"
+    reports_count: 0
+    factors_count: 0
+    notable_reports: []
+
+  - name: "国泰君安"
+    abbreviation: "GTJA"
+    reports_count: 0
+    factors_count: 0
+    notable_reports: []
+
+  - name: "中金公司"
+    abbreviation: "CICC"
+    reports_count: 0
+    factors_count: 0
+    notable_reports: []
+
+  - name: "中信证券"
+    abbreviation: "ZX"
+    reports_count: 0
+    factors_count: 0
+    notable_reports: []
+
+  - name: "海通证券"
+    abbreviation: "HT"
+    reports_count: 0
+    factors_count: 0
+    notable_reports: []
+
+  - name: "招商证券"
+    abbreviation: "ZS"
+    reports_count: 0
+    factors_count: 0
+    notable_reports: []
+
+  - name: "东方证券"
+    abbreviation: "DF"
+    reports_count: 0
+    factors_count: 0
+    notable_reports: []
+
+update_rules:
+  - "每次注册因子时更新对应券商的 factors_count"
+  - "记录研报标题到 notable_reports"
